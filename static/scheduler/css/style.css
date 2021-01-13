@@ -1,0 +1,119 @@
+.midasi {
+  color: #364e96;/*文字色*/
+  border: solid 3px #364e96;/*線色*/
+  padding: 0.5em;/*文字周りの余白*/
+  border-radius: 0.5em;/*角丸*/
+  margin : 10px;
+}
+
+.Buttonplus{
+    background: orange;
+}
+
+.margin10{
+ margin : 10px;
+}
+
+
+html {
+  font-size: 18px;
+}
+@media (max-width:  768px)  {
+  html {
+    font-size: 15px;
+  }
+}
+tr {
+    display: table-row;
+    vertical-align: inherit;
+    border-color: inherit;
+}
+th {
+    text-align: inherit;
+}
+containerM{
+    width: 100px;
+    height: 100px;
+    overflow: scroll;
+    border: blue;
+}
+.My-table{
+    height: 75vh;
+    overflow: scroll;
+}
+.MM{
+    position: fixed;
+}
+
+/* ios button */
+
+.ui20-and_conf {
+    display:inline-block;
+    position:relative;
+    width:6rem;
+    height:2rem;
+    margin:0.25rem;
+    background:#444;
+    transition:0.2s;
+    cursor:pointer;
+}
+.ui20-and_conf:before {
+    content:"AND";
+    font-weight:bold;
+    color:white;
+    position:absolute;
+    top:0;
+    left:0;
+    width:50%;
+    height:100%;
+    background:red;
+    transition:0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+input[type="checkbox"].ui20-input_chk:checked + label.ui20-and_conf:before{
+    content:"OR";
+    font-weight:bold;
+    left:50%;
+    background:deepskyblue;
+}
+input[type="checkbox"].ui20-input_chk:checked + label.ui20-and_green:before { background:green; }
+input[type="checkbox"].ui20-input_chk:checked + label.ui20-and_orange:before { background:orange; }
+input[type="checkbox"].ui20-input_chk:checked + label.ui20-and_crimson:before { background:crimson; }
+
+
+
+
+/* modal style */
+
+
+#modal{
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+}
+#modal_content{
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    max-height:85vh;
+    background:#fff;
+    padding:1rem;
+    border-radius:0.25rem;
+    border:solid 0.2rem deepskyblue;
+    position:absolute;
+    margin-top:3rem;
+}
+@media (max-width:768px) {
+    #modal_content{
+        width:85vw;
+        max-height:80vh;
+    }   
+}

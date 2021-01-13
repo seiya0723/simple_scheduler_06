@@ -1,0 +1,175 @@
+{% load static %}
+<!--↑staticディレクトリに格納した静的ファイルを読み込みするときは必ず指定-->
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <!--ここに検索エンジンに登録されないよう、noindex、nofollowのMETAタグを指定-->
+    <meta name="robots" content="noindex nofollow">
+
+	<title>スケジューラー</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    <link rel="stylesheet" href="{% static 'scheduler/css/style.css' %}">
+
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- staticを使って、JSファイルを読み込みましょう。 
+        <script src="script.js"></script> 
+        -->
+
+    <!--日本語化用JS-->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"></script>
+    <script src="{% static 'scheduler/js/script.js' %}"></script>
+
+
+</head>
+<!--
+<body onload="LoadProc();">
+-->
+<body>
+    <h2 class="midasi text-center" id="RealtimeClockArea2">スケジューラー</h2>
+
+    <main class="containerM">
+        <h1 id="RealtimeClockArea2" class="text-center"></h1>
+
+        <row class="row">
+            <div class="col-1 margin10" style="text:center;">予定を追加</div>
+            <button class="col-0.5" class="btn Buttonplus" onclick="addbutton()">＋</button>
+            <blank class="col-10.5"></blank>
+        </row>
+
+        <form id="addbutton1" class="margin10" method="POST">
+            <!--↓POST文実行時はCSRF対策のため必ず指定-->
+            {% csrf_token %}
+            <!--POST文を送信した際、name属性を元にviews.pyが参照を行う-->
+            <input id="dt" type="text" name="deadline" style="color:blue;margin-left:10px;" readonly value="クリックで日時を指定" required>
+            <!--
+            <input class="form-control" name="deadline" type="datetime-local" value="2020-12-06 11:30:00">
+            -->
+            <textarea  class="form-control" style="margin:5px 0px 5px 10px;" name="task" placeholder="ここにやることを書く＊日時、内容を記入しないと反映されません" rows="3" required maxlength="500"></textarea>
+            <input class="form-control" style="margin:5px 0px 5px 10px;" type="submit" value="登録">
+        </form>
+
+        <form action="" method="GET">
+
+            <!--ここにチェックボックスを設置すれば、AND検索とOR検索を切り替えられるようにする事ができる。-->
+            <div class="row align-items-center mx-0">
+
+                <input class="col-5 margin10" type="text" name="search" placeholder="キーワード検索" value="{{ request.GET.search }}">
+                <!--↑value属性に指定されている request.GET.search のテンプレート変数を使えば、検索キーワードをそのまま表示できる-->
+                <input class="col-1" type="submit" value="{{ ANDOR }}検索">
+                    <div class="ui_demo_area col-2">
+                        <input id="and_chk_01" class="ui20-input_chk" name="checkbox" type="checkbox" {% if request.GET.checkbox %}checked{% endif %}><label class="ui20-and_conf" for="and_chk_01"></label>
+                    </div>
+                <div class="col-4"></div>
+            </div>
+</form>
+                <!--↓テンプレートタグで繰り返し処理、条件分岐を行うことが可能(P74)-->
+        <div class="table-responsive My-table">
+            <table class="table">
+                <tbody class="border">
+
+                <div style="margin-left: 10px;">{{ data|length }} 件ヒットしています</div>
+
+                <div class="dropdown">
+                    <button type="button" id="dropdown1"
+                            class="btn btn-secondary dropdown-toggle"
+                            data-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false">
+                                並べ替え
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdown1">
+                        <a class="dropdown-item" href="{% url 'scheduler:index' %}?sort=deadline">優先：締切近</a>
+                        <a class="dropdown-item" href="{% url 'scheduler:index' %}?sort=r_deadline">優先：締切逆順</a>
+                        <a class="dropdown-item" href="{% url 'scheduler:index' %}?sort=done">優先：未完了</a>
+                        <a class="dropdown-item" href="{% url 'scheduler:index' %}?sort=-done">優先：完了済</a>
+                    </div>
+                </div>
+
+                    <thead class="thead-light">
+                        <tr><th><div>日時</div></th><th><div>内容</div></th><th style="white-space:nowrap;"><div>完了</div><th style="white-space:nowrap;"><div>編集</div></th><th style="white-space:nowrap;"><div>削除</div></th></tr>
+                    </thead>
+                    <!--↓テンプレート変数(p70)-->
+                    {% for content in data %}
+                    <tr class="midasi" style="{% if content.done %}background:pink;{% endif %}">
+                        <td style="white-space:nowrap;"><div id="{{ content.id }}_deadline" class="deadline_dt">{{ content.deadline|date:"Y年m月d日 H時i分" }}</div><div class="deadline_left"></div></td>
+                        <td><div id="{{ content.id }}_task">{{ content.task|linebreaksbr }}</div></td>
+
+                        <td style=white-space:nowrap;">
+                            <div>
+                                <!-- ↓ urls.pyでURLが done/ と定義したビューにPOST文を送る-->
+                                <form action="{% url 'scheduler:done' %}" method="POST">
+                                    {% csrf_token %}
+                                    <button class="btn btn-outline-warning done_button" style="{% if content.done %}color:blue;border-color:blue{% endif %}" name="id" value="{{ content.id }}">
+                                        {% if content.done %}
+                                        完了済
+                                        {% else %}
+                                        未完了
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <div>
+                                <!--編集はモーダルのフォームがsubmitしてくれるのでここにフォームは書かなくて良い-->
+                                <button class="btn btn-outline-success edit_button" name="id" value="{{ content.id }}">編集</button>
+                            </div>
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <div>
+                                <!-- ↓ urls.pyでURLが delete/ と定義したビューにPOST文を送る-->
+                                <form action="{% url 'scheduler:delete' %}" method="POST">
+                                    {% csrf_token %}
+                                    <button class="btn btn-outline-danger" name="id" value ="{{ content.id }}">削除</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+
+        <!--モーダルウィンドウ-->
+        <div id="modal">
+            <div id="modal_content" class="container">
+                <!--ここに編集先のURLを-->
+                <form action="{% url 'scheduler:edit' %}" method="POST" class="p-1">
+
+                    {% csrf_token %}
+
+                    <input id="edit_target_id" type="hidden" value="" name="id">
+                    
+                    <h2 class="text-center">編集中</h2>
+
+                    <input id="modal_deadline" type="text" value="" name="deadline" readonly required>
+                    <textarea id="modal_task" class="form-control" rows="6" name="task" required maxlength="500"></textarea>
+
+                    <input class="form-control" type="submit" value="編集">
+
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+</body>
+</html>
+
